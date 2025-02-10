@@ -1,6 +1,8 @@
 #include <cuda.h>
 #include <iostream>
 
+#define BLOCK_WIDTH 16
+
 using namespace std;
 
 // CUDA API error handling macro
@@ -45,8 +47,13 @@ void matmul(float* M, float* N, float* P, int width)
 
   gpuErrchk(cudaMalloc((void **) &d_P, size));
 
-  dim3 dimBlock(1);
-  dim3 dimGrid(16, 16);
+  int numBlocks = width / BLOCK_WIDTH;
+
+  if (width % BLOCK_WIDTH) numBlocks++;
+
+  dim3 dimGrid(numBlocks, numBlocks);
+  dim3 dimBlock(BLOCK_WIDTH, BLOCK_WIDTH);
+
   matMulKernel<<<dimGrid, dimBlock>>>(d_M, d_N, d_P, width);
 
   gpuErrchk(cudaMemcpy(P, d_P, size, cudaMemcpyDeviceToHost));
