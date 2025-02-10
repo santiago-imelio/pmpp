@@ -18,6 +18,10 @@ Just like the indexes, the grid dimensions and block dimensions can be accessed 
 ## Handling multidimensional data
 The choice of 1D, 2D, or 3D thread organizations are usually based on the nature of the data. For instance, grayscale images are 2D arrays of pixels, so it is often convenient to use a 2D grid of 2D blocks to process the pixels.
 
+We can launch a 2D kernel by using `dimGrid` and `dimBlock`. These helpers allows us to specify the kernel execution configuration in a more general way.
+- `dim3 dimBlock(x, y, z)` specifies the dimensions of a block. That is, the number of threads on the block in each axis $x, y$ and $z$.
+- `dim3 dimGrid(x, y, z)` specifies the dimensions of the grid. That is, the number of **blocks** in each axis $x, y$ and $z$.
+
 ## Matrix linearization
 When dealing with dynamically stored arrays, the C compiler does not know before hand the number of items that the array will store, and this is by design. Thus, the number of columns in a dynamically allocated 2D array is not known at compile time.
 
@@ -44,3 +48,13 @@ M_{j,i} = M[i * m + j]
 $$
 
 In reality, both static and dynamic arrays in C are linearized. Static multidimensional arrays gets to use the bracket syntax because the dimensional information is given at compile time, and under the hood the compiler linearizes it into 1D equivalent.
+
+### CUDA pattern to cover 2D array
+We introduce the following pattern of using global index values to ensure that every valid data element in a 2D aray is covered by a unique thread:
+```
+Row = blockIdx.y * blockDim.y + threadIdx.y
+```
+and
+```
+Col = blockIdx.x * blockDim.x + threadIdx.x
+```
