@@ -71,4 +71,9 @@ In CUDA, the `__syncthreads()` statement acts as such barrier.
 
 It is a responsability of the programmers to write their code so thata these requirements are satisfied.
 
+## Thread scheduling
+In most implementations to date, once a block is assigned to a streaming multiprocessor (SM) it is further divided into 32-thread units, called _warps_. The size of warps is implementation specific.
 
+<img title="warps" alt="Alt text" src="warps.png">
+
+The warp is the **unit of thread scheduling in SMs**. An SM is designed to execute all threads in a warp following  the single instruction, multiple data (SIMD) model. That is, at any instant in time, one instruction is fetched and executed for all threads in the warp (in more recent articles it is talked about the single instruction, multiple thread model—SIMT).
