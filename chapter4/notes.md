@@ -22,7 +22,7 @@ We can launch a 2D kernel by using `dimGrid` and `dimBlock`. These helpers allow
 - `dim3 dimBlock(x, y, z)` specifies the dimensions of a block. That is, the number of threads on the block in each axis $x, y$ and $z$.
 - `dim3 dimGrid(x, y, z)` specifies the dimensions of the grid. That is, the number of **blocks** in each axis $x, y$ and $z$.
 
-## Matrix linearization
+### Matrix linearization
 When dealing with dynamically stored arrays, the C compiler does not know before hand the number of items that the array will store, and this is by design. Thus, the number of columns in a dynamically allocated 2D array is not known at compile time.
 
 As a result, programmers need to explicitly **linearize** (flatten) a dynamically allocated matrix into an equivalent 1D array.
@@ -58,3 +58,17 @@ and
 ```
 Col = blockIdx.x * blockDim.x + threadIdx.x
 ```
+## Synchronization
+CUDA provides means to synchronize the execution of threads that belong to the same block.
+
+### Barrier synchronization
+A barrier for a group of threads in the source code means any thread must stop at this point and cannot proceed until all other threads/processes reach this barrier.
+
+In CUDA, the `__syncthreads()` statement acts as such barrier.
+- When `__syncthreads()` is present, it must be executed by all threads in a block.
+- When a `__syncthreads()` statement is placed in an `if` statement, either all threads in a block execute the path that includes `__syncthreads()` or none of them does.
+- For an `if-else` statement, if each path has a `__syncthreads()` statement, either all threads execute the `__syncthreads()` on the `if` path or all of them execute the `else` path. **These are two different barrier synchronization points**.
+
+It is a responsability of the programmers to write their code so thata these requirements are satisfied.
+
+
