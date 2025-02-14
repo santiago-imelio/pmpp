@@ -28,4 +28,6 @@ Registers and shared memory are on-chip memories. Variables stored here can be a
 
 Shared memory is allocated to thread blocks, so all threads in a block can access variables in the shared memory locations allocated for the block. It's an efficient mean for threads to cooperate by sharing their input data and the intermediate results of their progress.
 
+<img src="cuda-variables.png">
+
 
