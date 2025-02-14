@@ -37,8 +37,8 @@ CUDA extends the C function call syntax with kernel execution configuration para
 
 ### Predefined variables
 CUDA kernels can access a set of predefined variables that allow each thread to distinguish among themselves and to determine the area of data each thread is to work on.
-- `threadIdx` -> index of the thread of execution, between 0 and `blockDim.x`.
-- `blockIdx` -> index of the block of execution.
+- `threadIdx` -> 3D coordinates of the thread of execution.
+- `blockIdx` -> 3D coordinates of the block of execution.
 - `blockDim` -> represents the number of threads in the block.
 
 ### Runtime API
