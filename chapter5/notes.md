@@ -30,4 +30,7 @@ Shared memory is allocated to thread blocks, so all threads in a block can acces
 
 <img src="cuda-variables.png">
 
+## Memory as a limiting factor to parallelism
+While CUDA registers and shared memory can be extremely effective in reducing the number of accesses to global memory, one must be careful not to exceed the capacity of these memories. Once their capacities are exceeded, they become a limiting factor for the number of threads that can be simultaneously executing in each SM.
 
+The ability to reason about hardware limitations whene developing an application is a key aspect of computational thinking.
