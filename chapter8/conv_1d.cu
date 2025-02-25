@@ -14,7 +14,8 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    }
 }
 
-#define MAX_MASK_WIDTH 3
+#define MAX_MASK_WIDTH 5
+#define BLOCK_WIDTH 32
 
 __constant__ float M[MAX_MASK_WIDTH];
 
@@ -49,7 +50,7 @@ float* iota(int m, int n)
 }
 
 int main() {
-  int width = 10;
+  int width = 32;
 
   float* N = iota(1, width);
   float *d_P, *d_N;
@@ -59,14 +60,20 @@ int main() {
 
   h_M[0] = 3;
   h_M[1] = 7;
-  h_M[2] = 5;
+  h_M[2] = 9;
+  h_M[3] = 5;
+  h_M[4] = 1;
 
   gpuErrchk(cudaMalloc((void **)&d_N, width * sizeof(float)));
   gpuErrchk(cudaMalloc((void **)&d_P, width * sizeof(float)));
   gpuErrchk(cudaMemcpy(d_N, N, width * sizeof(float), cudaMemcpyHostToDevice));
   gpuErrchk(cudaMemcpyToSymbol(M, h_M, MAX_MASK_WIDTH * sizeof(float)));
 
-  conv_1d_basic_k<<<ceil(width/256.0), 256>>>(d_N, d_P, MAX_MASK_WIDTH, width);
+ int numBlocks = width / BLOCK_WIDTH;
+
+  if (width % BLOCK_WIDTH) numBlocks++;
+
+  conv_1d_basic_k<<<numBlocks, BLOCK_WIDTH>>>(d_N, d_P, MAX_MASK_WIDTH, width);
 
   gpuErrchk(cudaMemcpy(P, d_P, width * sizeof(float), cudaMemcpyDeviceToHost));
 

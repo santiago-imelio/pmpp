@@ -15,7 +15,8 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 }
 
 #define MAX_MASK_WIDTH 5
-#define TILE_WIDTH 4
+#define BLOCK_WIDTH 32
+#define TILE_WIDTH 32
 
 __constant__ float M[MAX_MASK_WIDTH];
 
@@ -34,8 +35,13 @@ __global__ void tiled_conv_1d_basic_k(float* N, float* P, int Mask_Width, int Wi
 
   Nds[n + threadIdx.x] = N[blockIdx.x * blockDim.x + threadIdx.x];
 
-  int halo_idx_right = (blockIdx.x + 1)*blockDim.x + threadIdx.x;
-  if (threadIdx.x < n) {
+  // TODO: There might be an error in the book.
+  // Need to check this to avoid overriding Nds[n + threadIdx]
+  // when threadIdx.x = blockIdx.x = 0;
+  bool is_Nds_loaded = Nds[n + blockIdx.x + threadIdx.x] != NULL;
+
+  int halo_idx_right = (blockIdx.x + 1) * blockDim.x + threadIdx.x;
+  if (threadIdx.x < n && !is_Nds_loaded) {
     Nds[n + blockIdx.x + threadIdx.x] = (halo_idx_right >= Width) ? 0 : N[halo_idx_right];
   }
 
@@ -64,7 +70,7 @@ float* iota(int m, int n)
 }
 
 int main() {
-  int width = 16;
+  int width = 32;
 
   float* N = iota(1, width);
   float *d_P, *d_N;
@@ -83,7 +89,11 @@ int main() {
   gpuErrchk(cudaMemcpy(d_N, N, width * sizeof(float), cudaMemcpyHostToDevice));
   gpuErrchk(cudaMemcpyToSymbol(M, h_M, MAX_MASK_WIDTH * sizeof(float)));
 
-  tiled_conv_1d_basic_k<<<4, 4>>>(d_N, d_P, MAX_MASK_WIDTH, width);
+  int numBlocks = width / BLOCK_WIDTH;
+
+  if (width % BLOCK_WIDTH) numBlocks++;
+
+  tiled_conv_1d_basic_k<<<numBlocks, BLOCK_WIDTH>>>(d_N, d_P, MAX_MASK_WIDTH, width);
 
   gpuErrchk(cudaMemcpy(P, d_P, width * sizeof(float), cudaMemcpyDeviceToHost));
 
